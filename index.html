@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/src/styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MetaPIC</title>
+    <script type="module" src="/src/main.ts" defer></script>
+  </head>
+
+  <body>
+    <header class="topbar">
+      <div class="brand">Meta<span>PIC</span></div>
+      <nav class="tabs" role="tablist">
+        <button class="tab active" data-tab="convert" role="tab">Converti</button>
+        <button class="tab" data-tab="metadata" role="tab">Metadati</button>
+        <button class="tab" data-tab="about" role="tab">Informazioni</button>
+      </nav>
+    </header>
+
+    <main>
+      <!-- Conversione -->
+      <section id="tab-convert" class="panel active">
+        <div class="files">
+          <div id="dropzone" class="dropzone">
+            <p class="drop-title">Trascina qui immagini o cartelle</p>
+            <p class="drop-sub">JPEG · PNG · WebP · AVIF · JPEG XL · TIFF · GIF · BMP · ICO · QOI</p>
+            <div class="drop-actions">
+              <button id="add-files">Aggiungi file</button>
+              <button id="add-folder">Aggiungi cartella</button>
+            </div>
+          </div>
+          <div class="list-header">
+            <span id="list-count">Nessun file</span>
+            <button id="clear-list" class="link" disabled>Svuota</button>
+          </div>
+          <ul id="file-list" class="file-list"></ul>
+        </div>
+
+        <aside class="options">
+          <fieldset>
+            <legend>Formato di uscita</legend>
+            <div id="formats" class="segmented"></div>
+            <p id="format-hint" class="hint"></p>
+          </fieldset>
+
+          <fieldset id="quality-box">
+            <legend>Qualità</legend>
+            <label class="check"><input type="checkbox" id="lossless" /> Senza perdita (lossless)</label>
+            <div class="slider">
+              <input type="range" id="quality" min="1" max="100" />
+              <output id="quality-out"></output>
+            </div>
+            <div class="slider" id="speed-row">
+              <span class="small">Velocità AVIF</span>
+              <input type="range" id="speed" min="1" max="10" />
+              <output id="speed-out"></output>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Ridimensiona</legend>
+            <select id="resize-mode">
+              <option value="none">Dimensioni originali</option>
+              <option value="fit">Adatta entro (max)</option>
+              <option value="percent">Percentuale</option>
+              <option value="exact">Dimensioni esatte</option>
+            </select>
+            <div id="resize-wh" class="inline">
+              <input type="number" id="resize-w" min="0" placeholder="Larghezza" />
+              <span>×</span>
+              <input type="number" id="resize-h" min="0" placeholder="Altezza" />
+              <span class="small">px</span>
+            </div>
+            <div id="resize-pct" class="inline">
+              <input type="number" id="resize-percent" min="1" max="1000" />
+              <span class="small">%</span>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Metadati EXIF</legend>
+            <label class="check"><input type="radio" name="meta" value="keep" /> Mantieni tutti</label>
+            <label class="check"><input type="radio" name="meta" value="keep_no_gps" /> Mantieni, ma togli la posizione GPS</label>
+            <label class="check"><input type="radio" name="meta" value="strip" /> Rimuovi tutti</label>
+            <details>
+              <summary>Imposta campi nelle immagini convertite</summary>
+              <div id="convert-edits" class="edit-grid"></div>
+            </details>
+          </fieldset>
+
+          <fieldset>
+            <legend>Destinazione</legend>
+            <label class="check"><input type="radio" name="dest" value="same" /> Stessa cartella dell'originale</label>
+            <label class="check"><input type="radio" name="dest" value="custom" /> Cartella:</label>
+            <div class="inline">
+              <input type="text" id="output-dir" readonly placeholder="Nessuna cartella scelta" />
+              <button id="pick-output">Scegli…</button>
+            </div>
+            <div class="inline">
+              <span class="small">Suffisso nome</span>
+              <input type="text" id="suffix" placeholder="es. -web" />
+            </div>
+            <label class="check"><input type="checkbox" id="overwrite" /> Sovrascrivi file esistenti</label>
+          </fieldset>
+
+          <div class="run">
+            <div class="progress"><div id="progress-bar"></div></div>
+            <p id="summary" class="small"></p>
+            <div class="inline">
+              <button id="convert" class="primary" disabled>Converti</button>
+              <button id="cancel" hidden>Annulla</button>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <!-- Metadati -->
+      <section id="tab-metadata" class="panel">
+        <div class="meta-head">
+          <div class="inline">
+            <button id="meta-open">Apri immagine…</button>
+            <span id="meta-file" class="small">Nessun file selezionato</span>
+          </div>
+          <p class="hint">Le modifiche vengono scritte direttamente nel file originale, senza ricomprimere l'immagine.</p>
+        </div>
+        <div class="meta-body">
+          <div class="meta-edit">
+            <h3>Modifica</h3>
+            <div id="meta-edits" class="edit-grid"></div>
+            <label class="check"><input type="checkbox" id="meta-remove-gps" /> Rimuovi la posizione GPS</label>
+            <div class="inline">
+              <button id="meta-save" class="primary" disabled>Salva modifiche</button>
+              <button id="meta-strip" class="danger" disabled>Rimuovi tutti i metadati</button>
+            </div>
+            <p id="meta-status" class="small"></p>
+          </div>
+          <div class="meta-table">
+            <h3>Tutti i tag</h3>
+            <table>
+              <thead><tr><th>Tag</th><th>Gruppo</th><th>Valore</th></tr></thead>
+              <tbody id="meta-tags"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Informazioni -->
+      <section id="tab-about" class="panel">
+        <div class="about">
+          <div class="about-head">
+            <div class="about-logo">Meta<span>PIC</span></div>
+            <p class="about-version">Versione <span id="app-version">0.1.0</span></p>
+            <p class="about-tagline">Converti le tue immagini nei formati moderni e gestisci i loro metadati, tutto in locale sul tuo computer.</p>
+          </div>
+
+          <div class="about-card">
+            <h3>Autore</h3>
+            <p>Progetto realizzato da <strong>Davide Giansoldati</strong><br />Content is king Srl</p>
+            <p>
+              <a href="mailto:davide@contentisking.guru" data-external>davide@contentisking.guru</a><br />
+              Codice sorgente: <a href="https://github.com/davide-cik/MetaPIC" data-external>github.com/davide-cik/MetaPIC</a>
+            </p>
+            <p class="small">© 2026 Davide Giansoldati / Content is king Srl. Distribuito con licenza MIT.</p>
+          </div>
+
+          <div class="about-card">
+            <h3>Privacy</h3>
+            <p>MetaPIC elabora le immagini esclusivamente sul tuo computer. Non invia file, metadati o dati di utilizzo a server esterni e non richiede una connessione a Internet.</p>
+          </div>
+
+          <div class="about-card">
+            <h3>Esclusione di responsabilità</h3>
+            <p>Il software è fornito "così com'è", senza garanzie di alcun tipo, esplicite o implicite, incluse a titolo esemplificativo le garanzie di commerciabilità, idoneità a uno scopo particolare e non violazione di diritti di terzi.</p>
+            <p>In nessun caso gli autori o i titolari del copyright potranno essere ritenuti responsabili per danni diretti o indiretti, perdita di dati, di file o di metadati, o per qualsiasi altro pregiudizio derivante dall'uso o dall'impossibilità di usare il software.</p>
+            <p>La modifica dei metadati e l'opzione "Sovrascrivi file esistenti" agiscono direttamente sui file: si raccomanda di conservare sempre una copia di backup degli originali. La conversione con perdita (lossy) riduce in modo irreversibile la qualità dell'immagine.</p>
+            <p>L'utente è responsabile di disporre dei diritti necessari sulle immagini elaborate e di rispettare le norme sulla protezione dei dati personali (es. GDPR) nel trattamento di metadati come posizione GPS, autore e dati del dispositivo.</p>
+            <p>JPEG, PNG, WebP, AVIF, JPEG XL, HEIC, TIFF, GIF e gli altri nomi citati sono marchi o standard dei rispettivi titolari. MetaPIC non è affiliato né approvato da tali titolari.</p>
+          </div>
+
+          <div class="about-card">
+            <h3>Componenti open source</h3>
+            <table class="licenses">
+              <tbody>
+                <tr><td>Tauri</td><td>Framework applicativo</td><td>MIT / Apache-2.0</td></tr>
+                <tr><td>image</td><td>JPEG, PNG, TIFF, GIF, BMP, ICO, QOI</td><td>MIT / Apache-2.0</td></tr>
+                <tr><td>libwebp</td><td>Codifica WebP</td><td>BSD-3-Clause</td></tr>
+                <tr><td>ravif · rav1e</td><td>Codifica AVIF</td><td>BSD-3 / BSD-2</td></tr>
+                <tr><td>avif-decode · rav1d</td><td>Decodifica AVIF</td><td>BSD-3 / BSD-2</td></tr>
+                <tr><td>jxl-oxide</td><td>Decodifica JPEG XL</td><td>MIT / Apache-2.0</td></tr>
+                <tr><td>zune-jpegxl</td><td>Codifica JPEG XL</td><td>MIT / Apache-2.0 / Zlib</td></tr>
+                <tr><td>little_exif</td><td>Metadati EXIF</td><td>MIT / Apache-2.0</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <details class="about-card">
+            <summary>Testo della licenza MIT</summary>
+            <pre class="license-text">MIT License
+
+Copyright (c) 2026 Davide Giansoldati / Content is king Srl
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</pre>
+          </details>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
