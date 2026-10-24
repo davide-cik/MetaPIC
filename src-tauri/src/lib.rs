@@ -153,7 +153,6 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(Cancel::default())
-        .manage(picker::Captures::default())
         .invoke_handler(tauri::generate_handler![
             expand_paths,
             thumbnail,
@@ -162,7 +161,8 @@ pub fn run() {
             read_metadata,
             write_metadata,
             picker::start_color_pick,
-            picker::capture_pixels,
+            picker::sample_cursor,
+            picker::nudge_cursor,
             picker::finish_color_pick
         ])
         .run(tauri::generate_context!())

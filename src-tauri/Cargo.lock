@@ -2990,7 +2990,7 @@ dependencies = [
 
 [[package]]
 name = "metapic"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "anyhow",
  "avif-decode",
@@ -3010,6 +3010,7 @@ dependencies = [
  "tauri-plugin-dialog",
  "tauri-plugin-opener",
  "webp",
+ "windows-sys 0.59.0",
  "xcap",
  "zune-core",
  "zune-jpegxl",

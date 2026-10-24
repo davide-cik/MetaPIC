@@ -1,6 +1,6 @@
 [package]
 name = "metapic"
-version = "0.2.3"
+version = "0.2.4"
 description = "MetaPIC: convertitore di immagini nei formati moderni"
 authors = ["Davide Giansoldati <davide@contentisking.guru>", "Content is king Srl"]
 license = "MIT"
@@ -53,3 +53,6 @@ strip = true
 default = ["avif-read"]
 # AVIF decoding via rav1d; its assembly needs NASM on the build machine.
 avif-read = ["dep:avif-decode"]
+
+[target.'cfg(windows)'.dev-dependencies]
+windows-sys = { version = "0.59", features = ["Win32_UI_HiDpi"] }

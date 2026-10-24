@@ -1,109 +1,121 @@
-// Full-screen overlay showing a frozen capture of one monitor.
+// Transparent overlay over one monitor: shows a live loupe of the real screen
+// under the cursor and reports the clicked color.
 import { invoke } from "@tauri-apps/api/core";
-import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
-const ZOOM = 11; // pixels per side shown in the loupe (odd, so there is a center)
+const ZOOM_PX = 165; // loupe size in CSS pixels
 
-const screenCanvas = document.getElementById("screen") as HTMLCanvasElement;
 const zoomCanvas = document.getElementById("zoom") as HTMLCanvasElement;
 const loupe = document.getElementById("loupe") as HTMLDivElement;
+const center = document.getElementById("center") as HTMLDivElement;
 const hexLabel = document.getElementById("hex") as HTMLSpanElement;
+const rgbLabel = document.getElementById("rgb") as HTMLSpanElement;
 const chip = document.getElementById("chip") as HTMLSpanElement;
 const help = document.getElementById("help") as HTMLDivElement;
 
-let width = 0;
-let height = 0;
-let pixels = new Uint8ClampedArray();
-let cursor = { x: 0, y: 0 }; // in capture pixels
+type Rgb = [number, number, number];
+
+let current: Rgb | null = null;
+let pointer = { x: -1, y: -1 }; // last position over this overlay, CSS pixels
+let busy = false;
 let done = false;
 
-const hex = (r: number, g: number, b: number) => "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("").toUpperCase();
+const hex = ([r, g, b]: Rgb) => "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("").toUpperCase();
 
-function colorAt(x: number, y: number): [number, number, number] {
-  const i = (y * width + x) * 4;
-  return [pixels[i], pixels[i + 1], pixels[i + 2]];
+interface Sample {
+  color: Rgb;
+  column: number;
+  row: number;
+  image: ImageData;
 }
 
-function finish(color: [number, number, number] | null) {
+async function sample(): Promise<Sample> {
+  const buffer = await invoke<ArrayBuffer>("sample_cursor");
+  const header = new DataView(buffer, 0, 16);
+  const [column, row, width, height] = [0, 4, 8, 12].map((offset) => header.getUint32(offset, true));
+  const pixels = new Uint8ClampedArray(buffer, 16, width * height * 4);
+  const i = (row * width + column) * 4;
+  return { color: [pixels[i], pixels[i + 1], pixels[i + 2]], column, row, image: new ImageData(pixels, width, height) };
+}
+
+function render(s: Sample) {
+  current = s.color;
+  const value = hex(s.color);
+  hexLabel.textContent = value;
+  rgbLabel.textContent = s.color.join(", ");
+  chip.style.background = value;
+
+  zoomCanvas.width = s.image.width;
+  zoomCanvas.height = s.image.height;
+  zoomCanvas.getContext("2d")!.putImageData(s.image, 0, 0);
+  const cell = ZOOM_PX / s.image.width;
+  center.style.left = `${s.column * cell - 1}px`;
+  center.style.top = `${s.row * cell - 1}px`;
+
+  // Next to the cursor, flipped near the edges so it stays on screen.
+  loupe.style.display = "block";
+  const box = loupe.getBoundingClientRect();
+  const gap = 28;
+  const left = pointer.x + gap + box.width > innerWidth ? pointer.x - gap - box.width : pointer.x + gap;
+  const top = pointer.y + gap + box.height > innerHeight ? pointer.y - gap - box.height : pointer.y + gap;
+  loupe.style.transform = `translate(${left}px, ${top}px)`;
+}
+
+/** Samples at most once per frame; the screen is read live each time. */
+async function refresh() {
+  if (busy || done || pointer.x < 0) return;
+  busy = true;
+  try {
+    render(await sample());
+  } catch {
+    // Cursor between monitors or capture hiccup: keep the last reading.
+  } finally {
+    busy = false;
+  }
+}
+
+async function finish(pick: boolean) {
   if (done) return;
+  let color: Rgb | null = null;
+  if (pick) {
+    try {
+      color = (await sample()).color;
+    } catch {
+      color = current;
+    }
+  }
   done = true;
   invoke("finish_color_pick", { color });
 }
 
-function render(clientX: number, clientY: number) {
-  const [r, g, b] = colorAt(cursor.x, cursor.y);
-  const value = hex(r, g, b);
-  hexLabel.textContent = value;
-  chip.style.background = value;
-
-  const ctx = zoomCanvas.getContext("2d")!;
-  const half = (ZOOM - 1) / 2;
-  ctx.fillStyle = "#000";
-  ctx.fillRect(0, 0, ZOOM, ZOOM);
-  ctx.drawImage(screenCanvas, cursor.x - half, cursor.y - half, ZOOM, ZOOM, 0, 0, ZOOM, ZOOM);
-
-  // Keep the loupe inside the window, flipping to the other side near edges.
-  loupe.style.display = "block";
-  const box = loupe.getBoundingClientRect();
-  const gap = 24;
-  const left = clientX + gap + box.width > innerWidth ? clientX - gap - box.width : clientX + gap;
-  const top = clientY + gap + box.height > innerHeight ? clientY - gap - box.height : clientY + gap;
-  loupe.style.transform = `translate(${left}px, ${top}px)`;
-}
-
-/** Maps CSS coordinates to capture pixels (the capture is in physical pixels). */
-function toPixel(clientX: number, clientY: number) {
-  return {
-    x: Math.min(width - 1, Math.max(0, Math.floor((clientX * width) / innerWidth))),
-    y: Math.min(height - 1, Math.max(0, Math.floor((clientY * height) / innerHeight))),
-  };
-}
-
-function toClient(p: { x: number; y: number }) {
-  return { x: ((p.x + 0.5) * innerWidth) / width, y: ((p.y + 0.5) * innerHeight) / height };
-}
-
-async function load() {
-  const label = getCurrentWebviewWindow().label;
-  const index = Number(label.split("-")[1]);
-  const buffer = await invoke<ArrayBuffer>("capture_pixels", { index });
-  const header = new DataView(buffer, 0, 8);
-  width = header.getUint32(0, true);
-  height = header.getUint32(4, true);
-  pixels = new Uint8ClampedArray(buffer, 8, width * height * 4);
-  screenCanvas.width = width;
-  screenCanvas.height = height;
-  screenCanvas.getContext("2d")!.putImageData(new ImageData(pixels, width, height), 0, 0);
-  zoomCanvas.getContext("2d")!.imageSmoothingEnabled = false;
-}
-
 window.addEventListener("mousemove", (e) => {
-  if (!width) return;
+  pointer = { x: e.clientX, y: e.clientY };
   help.style.opacity = "0.35";
-  cursor = toPixel(e.clientX, e.clientY);
-  render(e.clientX, e.clientY);
+  requestAnimationFrame(refresh);
+});
+
+window.addEventListener("mouseleave", () => {
+  // The cursor moved to another monitor's overlay, which takes over.
+  loupe.style.display = "none";
+  pointer = { x: -1, y: -1 };
 });
 
 window.addEventListener("mousedown", (e) => {
-  if (!width) return;
-  if (e.button === 0) finish(colorAt(cursor.x, cursor.y));
-  else finish(null);
+  e.preventDefault();
+  finish(e.button === 0);
 });
 
 window.addEventListener("contextmenu", (e) => e.preventDefault());
 
 window.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") return finish(null);
-  if (!width) return;
-  if (e.key === "Enter") return finish(colorAt(cursor.x, cursor.y));
+  if (e.key === "Escape") return finish(false);
+  if (e.key === "Enter" || e.key === " ") return finish(true);
   const step = e.shiftKey ? 10 : 1;
   const moves: Record<string, [number, number]> = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] };
   const move = moves[e.key];
   if (!move) return;
   e.preventDefault();
-  cursor = { x: Math.min(width - 1, Math.max(0, cursor.x + move[0])), y: Math.min(height - 1, Math.max(0, cursor.y + move[1])) };
-  const c = toClient(cursor);
-  render(c.x, c.y);
+  invoke("nudge_cursor", { dx: move[0], dy: move[1] });
 });
 
-load().catch(() => finish(null));
+// Keep the reading live even when the mouse is still (videos, animations).
+setInterval(refresh, 150);

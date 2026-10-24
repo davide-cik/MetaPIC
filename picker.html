@@ -10,16 +10,12 @@
         margin: 0;
         height: 100%;
         overflow: hidden;
-        background: #000;
+        /* Nearly invisible, but not fully transparent, so the window still receives the mouse.
+           The overlay is excluded from screen capture, so this tint never reaches the samples. */
+        background: rgba(0, 0, 0, 0.01);
         cursor: crosshair;
         user-select: none;
         font-family: "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
-      }
-      #screen {
-        position: fixed;
-        inset: 0;
-        width: 100vw;
-        height: 100vh;
       }
       #loupe {
         position: fixed;
@@ -38,7 +34,7 @@
         height: 165px;
         image-rendering: pixelated;
       }
-      /* 165px / 11 pixels = 15px per pixel; the center one starts at 75px. */
+      /* 165px / 11 pixels = 15px per pixel; moved to the cursor's pixel by script. */
       #center {
         position: absolute;
         left: 74px;
@@ -63,6 +59,10 @@
         border-radius: 4px;
         box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5);
       }
+      #rgb {
+        color: #aaa;
+        font-size: 12px;
+      }
       #help {
         position: fixed;
         left: 50%;
@@ -74,17 +74,17 @@
         background: rgba(17, 17, 17, 0.85);
         color: #fff;
         font-size: 13px;
+        transition: opacity 0.3s;
       }
     </style>
     <script type="module" src="/src/picker.ts" defer></script>
   </head>
   <body>
-    <canvas id="screen"></canvas>
-    <div id="help">Clic per prelevare il colore · frecce per spostarti di un pixel · Esc per annullare</div>
+    <div id="help">Muovi il puntatore dove vuoi · clic per prelevare · frecce per spostarti di un pixel · Esc per annullare</div>
     <div id="loupe">
       <canvas id="zoom" width="11" height="11"></canvas>
       <div id="center"></div>
-      <div id="label"><span id="chip"></span><span id="hex">#000000</span></div>
+      <div id="label"><span id="chip"></span><span id="hex">#000000</span><span id="rgb"></span></div>
     </div>
   </body>
 </html>
