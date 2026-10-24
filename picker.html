@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MetaPIC – Preleva colore</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #000;
+        cursor: crosshair;
+        user-select: none;
+        font-family: "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
+      }
+      #screen {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+      }
+      #loupe {
+        position: fixed;
+        left: 0;
+        top: 0;
+        pointer-events: none;
+        display: none;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.6);
+        background: #111;
+      }
+      #zoom {
+        display: block;
+        width: 165px;
+        height: 165px;
+        image-rendering: pixelated;
+      }
+      /* 165px / 11 pixels = 15px per pixel; the center one starts at 75px. */
+      #center {
+        position: absolute;
+        left: 74px;
+        top: 74px;
+        width: 15px;
+        height: 15px;
+        border: 1px solid #fff;
+        box-shadow: 0 0 0 1px #000;
+      }
+      #label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        color: #fff;
+        font-size: 13px;
+        font-variant-numeric: tabular-nums;
+      }
+      #chip {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5);
+      }
+      #help {
+        position: fixed;
+        left: 50%;
+        top: 24px;
+        transform: translateX(-50%);
+        pointer-events: none;
+        padding: 8px 14px;
+        border-radius: 8px;
+        background: rgba(17, 17, 17, 0.85);
+        color: #fff;
+        font-size: 13px;
+      }
+    </style>
+    <script type="module" src="/src/picker.ts" defer></script>
+  </head>
+  <body>
+    <canvas id="screen"></canvas>
+    <div id="help">Clic per prelevare il colore · frecce per spostarti di un pixel · Esc per annullare</div>
+    <div id="loupe">
+      <canvas id="zoom" width="11" height="11"></canvas>
+      <div id="center"></div>
+      <div id="label"><span id="chip"></span><span id="hex">#000000</span></div>
+    </div>
+  </body>
+</html>

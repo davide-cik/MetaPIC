@@ -2,6 +2,7 @@ mod codec;
 mod convert;
 mod heif;
 mod meta;
+mod picker;
 #[cfg(test)]
 mod tests;
 
@@ -152,13 +153,17 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(Cancel::default())
+        .manage(picker::Captures::default())
         .invoke_handler(tauri::generate_handler![
             expand_paths,
             thumbnail,
             convert_files,
             cancel_conversion,
             read_metadata,
-            write_metadata
+            write_metadata,
+            picker::start_color_pick,
+            picker::capture_pixels,
+            picker::finish_color_pick
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

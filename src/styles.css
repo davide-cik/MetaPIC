@@ -585,3 +585,104 @@ table.licenses td:last-child {
 a {
   color: var(--accent);
 }
+
+/* ---- Colors tab ---- */
+
+#tab-colors {
+  overflow-y: auto;
+  justify-content: center;
+}
+.colors {
+  width: 100%;
+  max-width: 640px;
+  padding: 24px 16px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.pick-card,
+.color-current,
+.color-history {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+}
+.pick-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+#pick-status:empty {
+  display: none;
+}
+.color-current {
+  display: flex;
+  gap: 18px;
+  align-items: stretch;
+}
+.color-swatch {
+  width: 120px;
+  flex-shrink: 0;
+  border-radius: var(--radius);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+.color-values {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.color-row .name {
+  width: 44px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.color-row code {
+  flex: 1;
+  font-family: "Cascadia Mono", Consolas, ui-monospace, monospace;
+  font-size: 13px;
+}
+.color-row button {
+  padding: 3px 10px;
+  font-size: 12px;
+}
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+.swatches button {
+  aspect-ratio: 1;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+.swatches button:hover:not(:disabled) {
+  filter: none;
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.swatches .empty {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 12px;
+}
+@media (max-width: 520px) {
+  .color-current {
+    flex-direction: column;
+  }
+  .color-swatch {
+    width: auto;
+    height: 80px;
+  }
+}

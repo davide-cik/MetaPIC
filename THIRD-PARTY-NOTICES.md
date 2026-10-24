@@ -13,6 +13,7 @@ MetaPIC include i seguenti componenti open source principali, ciascuno distribui
 | jxl-oxide | Decodifica JPEG XL | MIT o Apache-2.0 |
 | zune-jpegxl | Codifica JPEG XL | MIT, Apache-2.0 o Zlib |
 | little_exif | Lettura e scrittura EXIF | MIT o Apache-2.0 |
+| xcap | Cattura dello schermo (contagocce) | Apache-2.0 |
 
 This software is based in part on the work of the Independent JPEG Group.
 

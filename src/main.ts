@@ -540,6 +540,123 @@ $("#convert").addEventListener("click", async () => {
 
 $("#cancel").addEventListener("click", () => invoke("cancel_conversion"));
 
+// ---- Screen color picker ----
+
+type Rgb = [number, number, number];
+
+const toHex = ([r, g, b]: Rgb) => "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("").toUpperCase();
+
+function toHsl([r, g, b]: Rgb): [number, number, number] {
+  const [rn, gn, bn] = [r / 255, g / 255, b / 255];
+  const max = Math.max(rn, gn, bn);
+  const min = Math.min(rn, gn, bn);
+  const l = (max + min) / 2;
+  const d = max - min;
+  if (d === 0) return [0, 0, Math.round(l * 100)];
+  const s = d / (1 - Math.abs(2 * l - 1));
+  let h = max === rn ? ((gn - bn) / d) % 6 : max === gn ? (bn - rn) / d + 2 : (rn - gn) / d + 4;
+  h = Math.round(h * 60);
+  return [h < 0 ? h + 360 : h, Math.round(s * 100), Math.round(l * 100)];
+}
+
+function toCmyk([r, g, b]: Rgb): [number, number, number, number] {
+  const k = 1 - Math.max(r, g, b) / 255;
+  if (k === 1) return [0, 0, 0, 100];
+  const c = (x: number) => Math.round(((1 - x / 255 - k) / (1 - k)) * 100);
+  return [c(r), c(g), c(b), Math.round(k * 100)];
+}
+
+function colorFormats(rgb: Rgb): [string, string][] {
+  const [h, s, l] = toHsl(rgb);
+  const [c, m, y, k] = toCmyk(rgb);
+  return [
+    ["HEX", toHex(rgb)],
+    ["RGB", `rgb(${rgb.join(", ")})`],
+    ["HSL", `hsl(${h}, ${s}%, ${l}%)`],
+    ["CMYK", `${c}%, ${m}%, ${y}%, ${k}%`],
+  ];
+}
+
+const HISTORY_KEY = "colorHistory";
+let colorHistory: Rgb[] = [];
+try {
+  colorHistory = JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]");
+} catch {
+  colorHistory = [];
+}
+
+function saveColorHistory() {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(colorHistory));
+  } catch {
+    // History just won't persist.
+  }
+}
+
+async function copyText(text: string, button: HTMLButtonElement) {
+  try {
+    await navigator.clipboard.writeText(text);
+    button.textContent = "Copiato";
+  } catch {
+    button.textContent = "Errore";
+  }
+  setTimeout(() => (button.textContent = "Copia"), 1200);
+}
+
+function showColor(rgb: Rgb) {
+  $("#color-current").hidden = false;
+  $("#color-swatch").style.background = toHex(rgb);
+  $("#color-values").replaceChildren(
+    ...colorFormats(rgb).map(([name, value]) => {
+      const copy = el("button", { textContent: "Copia" });
+      copy.addEventListener("click", () => copyText(value, copy));
+      return el("div", { className: "color-row" }, [el("span", { className: "name", textContent: name }), el("code", { textContent: value }), copy]);
+    }),
+  );
+}
+
+function renderColorHistory() {
+  const box = $("#color-history");
+  box.replaceChildren();
+  if (!colorHistory.length) {
+    box.append(el("span", { className: "empty", textContent: "Nessun colore prelevato" }));
+  }
+  for (const rgb of colorHistory) {
+    const swatch = el("button", { title: toHex(rgb) });
+    swatch.style.background = toHex(rgb);
+    swatch.addEventListener("click", () => showColor(rgb));
+    box.append(swatch);
+  }
+  $<HTMLButtonElement>("#clear-colors").disabled = colorHistory.length === 0;
+}
+
+listen<Rgb>("color-picked", ({ payload }) => {
+  showTab("colors");
+  $("#pick-status").textContent = "";
+  colorHistory = [payload, ...colorHistory.filter((c) => toHex(c) !== toHex(payload))].slice(0, 32);
+  saveColorHistory();
+  renderColorHistory();
+  showColor(payload);
+});
+
+$("#pick-color").addEventListener("click", async () => {
+  $("#pick-status").textContent = "";
+  try {
+    await invoke("start_color_pick");
+  } catch (e) {
+    $("#pick-status").textContent = `Errore: ${e}`;
+  }
+});
+
+$("#clear-colors").addEventListener("click", () => {
+  colorHistory = [];
+  saveColorHistory();
+  renderColorHistory();
+});
+
+renderColorHistory();
+if (colorHistory.length) showColor(colorHistory[0]);
+
 // ---- Metadata editor ----
 
 let metaPath: string | null = null;

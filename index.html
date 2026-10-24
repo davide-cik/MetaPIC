@@ -14,6 +14,7 @@
       <nav class="tabs" role="tablist">
         <button class="tab active" data-tab="convert" role="tab">Converti</button>
         <button class="tab" data-tab="metadata" role="tab">Metadati</button>
+        <button class="tab" data-tab="colors" role="tab">Colori</button>
         <button class="tab" data-tab="about" role="tab">Informazioni</button>
       </nav>
     </header>
@@ -145,13 +146,37 @@
         </div>
       </section>
 
+      <!-- Colori -->
+      <section id="tab-colors" class="panel">
+        <div class="colors">
+          <div class="pick-card">
+            <button id="pick-color" class="primary">Preleva colore dallo schermo</button>
+            <p class="hint">Funziona su tutti i monitor e su qualsiasi finestra. MetaPIC si nasconde, poi fai clic sul punto desiderato; Esc per annullare.</p>
+            <p id="pick-status" class="small"></p>
+          </div>
+
+          <div id="color-current" class="color-current" hidden>
+            <div id="color-swatch" class="color-swatch"></div>
+            <div id="color-values" class="color-values"></div>
+          </div>
+
+          <div class="color-history">
+            <div class="list-header">
+              <span>Colori recenti</span>
+              <button id="clear-colors" class="link">Svuota</button>
+            </div>
+            <div id="color-history" class="swatches"></div>
+          </div>
+        </div>
+      </section>
+
       <!-- Informazioni -->
       <section id="tab-about" class="panel">
         <div class="about">
           <div class="about-head">
             <div class="about-logo">Meta<span>PIC</span></div>
-            <p class="about-version">Versione <span id="app-version">0.2.2</span></p>
-            <p class="about-tagline">Converti le tue immagini nei formati moderni e gestisci i loro metadati, tutto in locale sul tuo computer.</p>
+            <p class="about-version">Versione <span id="app-version">0.2.3</span></p>
+            <p class="about-tagline">Converti le tue immagini nei formati moderni, gestisci i loro metadati e preleva colori da tutto lo schermo, tutto in locale sul tuo computer.</p>
           </div>
 
           <div class="about-card">
@@ -191,6 +216,7 @@
                 <tr><td>jxl-oxide</td><td>Decodifica JPEG XL</td><td>MIT / Apache-2.0</td></tr>
                 <tr><td>zune-jpegxl</td><td>Codifica JPEG XL</td><td>MIT / Apache-2.0 / Zlib</td></tr>
                 <tr><td>little_exif</td><td>Metadati EXIF</td><td>MIT / Apache-2.0</td></tr>
+                <tr><td>xcap</td><td>Cattura dello schermo</td><td>Apache-2.0</td></tr>
               </tbody>
             </table>
             <p class="small">This software is based in part on the work of the Independent JPEG Group.</p>

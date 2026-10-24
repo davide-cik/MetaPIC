@@ -10,6 +10,12 @@ export default defineConfig(() => ({
   //
   // 1. prevent Vite from obscuring rust errors
   clearScreen: false,
+  // Two pages: the main window and the screen color picker overlay.
+  build: {
+    rollupOptions: {
+      input: { main: "index.html", picker: "picker.html" },
+    },
+  },
   // 2. tauri expects a fixed port, fail if that port is not available
   server: {
     port: 1420,
