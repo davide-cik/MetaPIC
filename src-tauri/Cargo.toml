@@ -1,6 +1,6 @@
 [package]
 name = "metapic"
-version = "0.1.0"
+version = "0.2.1"
 description = "MetaPIC: convertitore di immagini nei formati moderni"
 authors = ["Davide Giansoldati <davide@contentisking.guru>", "Content is king Srl"]
 license = "MIT"

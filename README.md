@@ -1,5 +1,7 @@
 # MetaPIC
 
+Versione: **0.2.1**
+
 App desktop (Windows, in futuro macOS) per convertire immagini nei formati moderni, in batch, con controllo di qualità, ridimensionamento e gestione dei metadati EXIF.
 
 Repository: https://github.com/davide-cik/MetaPIC
@@ -39,6 +41,8 @@ Test della pipeline (genera una foto con EXIF, la converte in tutti i formati e 
 ```bash
 cd src-tauri && cargo test --release --lib
 ```
+
+Versione: ogni commit incrementa la patch in automatico (hook `.githooks/pre-commit`, attivato da `npm install`). Per un salto manuale: `npm run bump-version -- 0.3.0`.
 
 Build dell'installer: `npm run tauri build` (produce `.msi` / `.exe` in `src-tauri/target/release/bundle`).
 

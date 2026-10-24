@@ -1,0 +1,5 @@
+#!/bin/sh
+# Bumps the version on every commit (see scripts/bump-version.mjs).
+# Skip with: SKIP_VERSION_BUMP=1 git commit ...
+[ -n "$SKIP_VERSION_BUMP" ] && exit 0
+exec node scripts/bump-version.mjs
