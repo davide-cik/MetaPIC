@@ -1,6 +1,6 @@
 # MetaPIC
 
-Versione: **0.2.1**
+Versione: **0.2.2**
 
 App desktop (Windows, in futuro macOS) per convertire immagini nei formati moderni, in batch, con controllo di qualità, ridimensionamento e gestione dei metadati EXIF.
 
@@ -12,7 +12,7 @@ Stack: [Tauri 2](https://tauri.app) + Rust (backend) e TypeScript senza framewor
 
 | Formato  | Lettura | Scrittura | EXIF in conversione | Modifica EXIF sul file |
 |----------|:-------:|:---------:|:-------------------:|:----------------------:|
-| JPEG     | ✓ | ✓ qualità | ✓ | ✓ |
+| JPEG     | ✓ | ✓ qualità (mozjpeg) | ✓ | ✓ |
 | PNG      | ✓ | ✓ lossless | ✓ | ✓ |
 | WebP     | ✓ | ✓ qualità / lossless | ✓ | ✓ |
 | AVIF     | ✓ ¹ | ✓ qualità / velocità | ✓ | — |
@@ -63,5 +63,4 @@ MIT, © 2026 Davide Giansoldati / Content is king Srl ([davide@contentisking.gur
 
 - HEIC in lettura (libheif) e JPEG XL lossy (libjxl): richiedono librerie C con CMake
 - Modifica in-place degli EXIF negli AVIF
-- JPEG con mozjpeg per file più piccoli
 - CLI che riusa lo stesso core

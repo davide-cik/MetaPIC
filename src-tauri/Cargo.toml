@@ -1,6 +1,6 @@
 [package]
 name = "metapic"
-version = "0.2.1"
+version = "0.2.2"
 description = "MetaPIC: convertitore di immagini nei formati moderni"
 authors = ["Davide Giansoldati <davide@contentisking.guru>", "Content is king Srl"]
 license = "MIT"
@@ -38,6 +38,7 @@ tauri-plugin-dialog = "2.8.3"
 bytemuck = "1.25.2"
 base64 = "0.23.1"
 rgb = "0.8"
+mozjpeg = "0.10.13"
 
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration

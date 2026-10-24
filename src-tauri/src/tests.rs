@@ -167,3 +167,29 @@ fn edits_metadata_in_place() {
         println!("{format:?}: in-place edit ok");
     }
 }
+
+#[test]
+fn mozjpeg_beats_baseline_jpeg() {
+    // Photo-like content: smooth gradients plus deterministic noise.
+    let mut seed = 0x2545F491u32;
+    let img = image::RgbImage::from_fn(800, 600, |x, y| {
+        seed ^= seed << 13;
+        seed ^= seed >> 17;
+        seed ^= seed << 5;
+        let n = (seed % 24) as i32 - 12;
+        let c = |v: u32| (v as i32 + n).clamp(0, 255) as u8;
+        image::Rgb([c(x * 255 / 800), c(y * 255 / 600), c((x + y) * 255 / 1400)])
+    });
+    let dynamic = DynamicImage::ImageRgb8(img.clone());
+    for quality in [60u8, 75, 90] {
+        let mut baseline = Vec::new();
+        image::codecs::jpeg::JpegEncoder::new_with_quality(&mut baseline, quality).encode_image(&img).unwrap();
+        let opts = codec::EncodeOptions { quality, lossless: false, speed: 10, exif: None };
+        let moz = codec::encode(&dynamic, Format::Jpeg, &opts).unwrap();
+        let (decoded, _) = codec::decode(&moz).unwrap();
+        assert_eq!((decoded.width(), decoded.height()), (800, 600));
+        let saving = 100.0 - moz.len() as f64 * 100.0 / baseline.len() as f64;
+        println!("q{quality}: baseline {} B, mozjpeg {} B ({saving:.1}% in meno)", baseline.len(), moz.len());
+        assert!(moz.len() < baseline.len(), "q{quality}: mozjpeg not smaller");
+    }
+}

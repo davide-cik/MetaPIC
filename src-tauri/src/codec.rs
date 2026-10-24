@@ -1,7 +1,6 @@
 //! Format detection, decoding and encoding.
 
 use anyhow::{Context, Result, anyhow, bail};
-use image::codecs::jpeg::JpegEncoder;
 use image::codecs::png::{CompressionType, FilterType, PngEncoder};
 use image::{DynamicImage, ImageFormat, RgbImage};
 use serde::{Deserialize, Serialize};
@@ -152,8 +151,7 @@ pub fn encode(img: &DynamicImage, format: Format, opts: &EncodeOptions) -> Resul
     let (w, h) = (img.width(), img.height());
     match format {
         Format::Jpeg => {
-            let rgb = flatten_on_white(img);
-            JpegEncoder::new_with_quality(&mut out, opts.quality.clamp(1, 100)).encode_image(&rgb)?;
+            out = encode_mozjpeg(&flatten_on_white(img), opts.quality)?;
         }
         Format::Png => {
             let encoder = PngEncoder::new_with_quality(&mut out, CompressionType::Best, FilterType::Adaptive);
@@ -222,6 +220,22 @@ pub fn encode(img: &DynamicImage, format: Format, opts: &EncodeOptions) -> Resul
         Format::Heic => bail!("la scrittura HEIC non è ancora supportata"),
     }
     Ok(out)
+}
+
+/// mozjpeg with its defaults: progressive scans, optimized Huffman tables and
+/// trellis quantization, typically 10–20% smaller than baseline at equal quality.
+fn encode_mozjpeg(rgb: &RgbImage, quality: u8) -> Result<Vec<u8>> {
+    // libjpeg reports fatal errors by unwinding.
+    std::panic::catch_unwind(|| -> std::io::Result<Vec<u8>> {
+        let mut comp = mozjpeg::Compress::new(mozjpeg::ColorSpace::JCS_RGB);
+        comp.set_size(rgb.width() as usize, rgb.height() as usize);
+        comp.set_quality(quality.clamp(1, 100) as f32);
+        let mut started = comp.start_compress(Vec::new())?;
+        started.write_scanlines(rgb.as_raw())?;
+        started.finish()
+    })
+    .map_err(|_| anyhow!("JPEG: errore interno di mozjpeg"))?
+    .context("JPEG")
 }
 
 /// JPEG has no alpha: composite transparent pixels on white instead of black.
